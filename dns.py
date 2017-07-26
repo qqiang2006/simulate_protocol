@@ -37,3 +37,4 @@ class dns_pack:
 if __name__=='__main__':
     dns_query=dns_pack()
     dns_query.query('114.114.114.114')
+    test
