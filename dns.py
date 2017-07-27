@@ -1,5 +1,26 @@
 #coding=utf8
-import struct,random,socket
+'''
+FORMAT	C TYPE	PYTHON TYPE	STANDARD SIZE	NOTES
+x	pad byte	no value	 	 
+c	char	string of length 1	1	 
+b	signed char	integer	1	(3)
+B	unsigned char	integer	1	(3)
+?	_Bool	bool	1	(1)
+h	short	integer	2	(3)
+H	unsigned short	integer	2	(3)
+i	int	integer	4	(3)
+I	unsigned int	integer	4	(3)
+l	long	integer	4	(3)
+L	unsigned long	integer	4	(3)
+q	long long	integer	8	(2), (3)
+Q	unsigned long long	integer	8	(2), (3)
+f	float	float	4	(4)
+d	double	float	8	(4)
+s	char[]	string	1 	 
+p	char[]	string	 	 
+P	void *	integer	 	(5), (3)
+'''
+import struct,random,socket,thread,time
 class dns_pack:
     def __init__(self):
         self.TransactionID=random.randint(1,32768)
@@ -10,31 +31,35 @@ class dns_pack:
         self.AddtionalRRs=0x0000
         self.QTYPE=0x0001
         self.QCLASS=0x0001
-    def query(self,dnserver):
-        req=['test','edit']
-        header=struct.pack('!hhhhhh',self.TransactionID,self.Flags,self.Questions,self.AnswerRRs,self.AuthorityRRs,self.AddtionalRRs)
-        for i in req:
-            domain="www."+i+".com"
-            dmp=domain.split('.')
-            body=''
-            for i in dmp:
-                label=struct.pack('B%ds'%len(i),len(i),i)
-                body+=label
-            body+='\0'
-            tail=struct.pack('!hh',self.QTYPE,self.QCLASS)
-            Buf=header+body+tail
-            s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-            HOST = '192.168.99.151'
-            PORT = 1024
-            saddr = (HOST, PORT)
-            s.bind(saddr)
-            s.sendto(Buf,(dnserver,53))
-            print "query" +' ' +domain + " "+ "is ok"
-            data=s.recv(1024)
-            print struct.unpack("4s", data[-4:])
-            print socket.inet_ntoa(str(struct.unpack("!4s", data[-6:-2])))
-            s.close()
+    def query(self,domainname,dnserver):
+        #dns封装，从上到下依次pack
+        #头部
+        header=struct.pack('!HHhhhh',self.TransactionID,self.Flags,self.Questions,self.AnswerRRs,self.AuthorityRRs,self.AddtionalRRs)
+        #question,域名编码格式为按点号分片，之后字符长度加上字符，比如www.baidu.com等于3www5baidu3com
+        dmp=domainname.split('.')
+        body=''
+        for i in dmp:
+            label=struct.pack('b%ds'%len(i),len(i),i)
+            body+=label
+        body+='\0'
+        tail=struct.pack('!hh',self.QTYPE,self.QCLASS)
+        Buf=header+body+tail
+        #建立udp连接
+        s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+        HOST = ''
+        PORT = 1024
+        saddr = (HOST, PORT)
+        s.bind(saddr)
+        s.sendto(Buf,(dnserver,53))
+        print "query" +' ' +domainname + " "+ "is ok"
+        data,addr=s.recvfrom(1024)
+        print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[42:46])[0])
+        s.close()
 if __name__=='__main__':
     dns_query=dns_pack()
-    dns_query.query('114.114.114.114')
-    test
+    domain_name=raw_input("Please input your domainname:")
+    # for i in range(10):
+    #     thread.start_new_thread(dns_query.query,(domain_name,'114.114.114.114'))
+    #     time.sleep(1)
+    for i in range(10):
+        dns_query.query(domain_name,'114.114.114.114')
