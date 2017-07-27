@@ -55,20 +55,27 @@ class dns_pack:
         saddr = (HOST, PORT)
         s.bind(saddr)
         s.sendto(Buf,(dnserver,53))
-        print "query" +' ' +domainname + " "+ "is ok"
+        print "Query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
         #计算域名长度，推导出Answer字段中域名解析的偏移量
         domain_offset=domain_length+j+1
-        answer_offset=12+domain_offset+4+12
+        answer_offset=12+domain_offset+4
         type_offset=12+domain_offset+4+2
-        if data[33:35] == '\x00\x01':
-            print 'type is cname'
+        #print struct.unpack('<h',data[33:35])
+        if data[answer_offset+2:answer_offset+4] == '\x00\x01':#网络字节序采用bid endian存取，
+            print 'this answer type is host address'
+            print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset+12:answer_offset+16])[0])
+        elif data[answer_offset+2:answer_offset+4] == '\x00\x05':
+            print 'this answer type is CNAME'
+            cname_length=struct.unpack('!h',data[answer_offset + 10:answer_offset + 12])[0]
+            if data[answer_offset+12+cname_length+2:answer_offset+12+cname_length+4] == '\x00\x01':
+                print 'this answer type is host address'
+                print "the IP" + " " + " " + "is" + " " + socket.inet_ntoa(
+                    struct.unpack("4s", data[answer_offset+12+cname_length+12:answer_offset+12+cname_length+16])[0])
+
         else:
-            print 'fail'
-        # print data[answer_offset:answer_offset+5]
-        # if type_offset ==
-        # answser_offset=12+domain_offset+4+domain_offset+10
-        # print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset:answer_offset+=5])[0])
+            print '目前没考虑'
+
         s.close()
 if __name__=='__main__':
     dns_query=dns_pack()
