@@ -38,9 +38,13 @@ class dns_pack:
         #question,域名编码格式为按点号分片，之后字符长度加上字符，比如www.baidu.com等于3www5baidu3com
         dmp=domainname.split('.')
         body=''
+        domain_length=0
+        j=0
         for i in dmp:
             label=struct.pack('b%ds'%len(i),len(i),i)
             body+=label
+            domain_length+=len(i)
+            j+=1
         body+='\0'
         tail=struct.pack('!hh',self.QTYPE,self.QCLASS)
         Buf=header+body+tail
@@ -53,7 +57,18 @@ class dns_pack:
         s.sendto(Buf,(dnserver,53))
         print "query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
-        print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[42:46])[0])
+        #计算域名长度，推导出Answer字段中域名解析的偏移量
+        domain_offset=domain_length+j+1
+        answer_offset=12+domain_offset+4+12
+        type_offset=12+domain_offset+4+2
+        if data[33:35] == '\x00\x01':
+            print 'type is cname'
+        else:
+            print 'fail'
+        # print data[answer_offset:answer_offset+5]
+        # if type_offset ==
+        # answser_offset=12+domain_offset+4+domain_offset+10
+        # print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset:answer_offset+=5])[0])
         s.close()
 if __name__=='__main__':
     dns_query=dns_pack()
@@ -61,5 +76,5 @@ if __name__=='__main__':
     # for i in range(10):
     #     thread.start_new_thread(dns_query.query,(domain_name,'114.114.114.114'))
     #     time.sleep(1)
-    for i in range(10):
-        dns_query.query(domain_name,'114.114.114.114')
+
+    dns_query.query(domain_name,'114.114.114.114')
