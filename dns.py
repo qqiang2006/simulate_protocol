@@ -39,7 +39,7 @@ class dns_pack:
         dmp=domainname.split('.')
         body=''
         domain_length=0
-        j=0
+        j=0#统计domain分成的label数
         for i in dmp:
             label=struct.pack('b%ds'%len(i),len(i),i)
             body+=label
@@ -57,24 +57,27 @@ class dns_pack:
         s.sendto(Buf,(dnserver,53))
         print "Query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
-        #计算域名长度，推导出Answer字段中域名解析的偏移量
-        domain_offset=domain_length+j+1
-        answer_offset=12+domain_offset+4
-        type_offset=12+domain_offset+4+2
-        #print struct.unpack('<h',data[33:35])
-        if data[answer_offset+2:answer_offset+4] == '\x00\x01':#网络字节序采用bid endian存取，
-            print 'this answer type is host address'
-            print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset+12:answer_offset+16])[0])
-        elif data[answer_offset+2:answer_offset+4] == '\x00\x05':
-            print 'this answer type is CNAME'
-            cname_length=struct.unpack('!h',data[answer_offset + 10:answer_offset + 12])[0]
-            if data[answer_offset+12+cname_length+2:answer_offset+12+cname_length+4] == '\x00\x01':
-                print 'this answer type is host address'
-                print "the IP" + " " + " " + "is" + " " + socket.inet_ntoa(
-                    struct.unpack("4s", data[answer_offset+12+cname_length+12:answer_offset+12+cname_length+16])[0])
-
+        #判断有没有应答返回
+        if data[6:8]=='\x00\x00':
+            print '域名解析失败'
         else:
-            print '目前没考虑'
+            #计算域名长度，推导出Answer字段中域名解析的偏移量
+            domain_offset=domain_length+j+1
+            answer_offset=12+domain_offset+4
+            type_offset=12+domain_offset+4+2
+            #print struct.unpack('<h',data[33:35])
+            if data[answer_offset+2:answer_offset+4] == '\x00\x01':#网络字节序采用bid endian存取，
+                print 'this answer type is host address'
+                print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset+12:answer_offset+16])[0])
+            elif data[answer_offset+2:answer_offset+4] == '\x00\x05':
+                print 'this answer type is CNAME'
+                cname_length=struct.unpack('!h',data[answer_offset + 10:answer_offset + 12])[0]
+                if data[answer_offset+12+cname_length+2:answer_offset+12+cname_length+4] == '\x00\x01':
+                    print 'this answer type is host address'
+                    print "the IP" + " " + " " + "is" + " " + socket.inet_ntoa(
+                        struct.unpack("4s", data[answer_offset+12+cname_length+12:answer_offset+12+cname_length+16])[0])
+            else:
+                print '目前没考虑'
 
         s.close()
 if __name__=='__main__':
