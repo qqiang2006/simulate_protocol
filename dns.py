@@ -68,13 +68,13 @@ class dns_pack:
             #print struct.unpack('<h',data[33:35])
             if data[answer_offset+2:answer_offset+4] == '\x00\x01':#网络字节序采用bid endian存取，
                 print 'this answer type is host address'
-                print "the IP" + " "+" "+"is" + " "+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset+12:answer_offset+16])[0])
+                print "Address:"+ socket.inet_ntoa(struct.unpack("4s",data[answer_offset+12:answer_offset+16])[0])
             elif data[answer_offset+2:answer_offset+4] == '\x00\x05':
                 print 'this answer type is CNAME'
                 cname_length=struct.unpack('!h',data[answer_offset + 10:answer_offset + 12])[0]
                 if data[answer_offset+12+cname_length+2:answer_offset+12+cname_length+4] == '\x00\x01':
                     print 'this answer type is host address'
-                    print "the IP" + " " + " " + "is" + " " + socket.inet_ntoa(
+                    print "Address:" + socket.inet_ntoa(
                         struct.unpack("4s", data[answer_offset+12+cname_length+12:answer_offset+12+cname_length+16])[0])
             else:
                 print '目前没考虑'
