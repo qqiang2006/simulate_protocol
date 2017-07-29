@@ -57,7 +57,7 @@ class dns_pack:
         s.sendto(Buf,(dnserver,53))
         print "Query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
-        #判断有没有应答返回
+        #判断有answer是否为空
         if data[6:8]=='\x00\x00':
             print '域名解析失败'
         else:
