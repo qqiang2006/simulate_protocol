@@ -20,7 +20,7 @@ s	char[]	string	1
 p	char[]	string	 	 
 P	void *	integer	 	(5), (3)
 '''
-import struct,random,socket,thread,time
+import struct,random,socket,threading,time,thread
 class dns_pack:
     def __init__(self):
         self.TransactionID=random.randint(1,32768)
@@ -34,6 +34,7 @@ class dns_pack:
     def query(self,domainname,dnserver):
         #dns封装，从上到下依次pack
         #头部
+        #print time.ctime()
         header=struct.pack('!HHhhhh',self.TransactionID,self.Flags,self.Questions,self.AnswerRRs,self.AuthorityRRs,self.AddtionalRRs)
         #question,域名编码格式为按点号分片，之后字符长度加上字符，比如www.baidu.com等于3www5baidu3com
         dmp=domainname.split('.')
@@ -51,12 +52,13 @@ class dns_pack:
         #建立udp连接
         s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
         HOST = ''
-        PORT = 1024
+        PORT = 0
         saddr = (HOST, PORT)
         s.bind(saddr)
         s.sendto(Buf,(dnserver,53))
         print "Query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
+        #print time.clock()
         #判断有answer是否为空
         if data[6:8]=='\x00\x00':
             print '域名解析失败'
@@ -82,9 +84,13 @@ class dns_pack:
         s.close()
 if __name__=='__main__':
     dns_query=dns_pack()
-    domain_name=raw_input("Please input your domainname:")
-    # for i in range(10):
-    #     thread.start_new_thread(dns_query.query,(domain_name,'114.114.114.114'))
-    #     time.sleep(1)
-
-    dns_query.query(domain_name,'114.114.114.114')
+    domain_name=raw_input("Please input your domainname:").split(',')
+    #实现并发
+    threads=[]
+    for i in range(int(domain_name[1])):
+        t_i=threading.Thread(target=dns_query.query,args=(domain_name[0],'114.114.114.114'))
+        threads.append(t_i)
+    for t in threads:
+        t.setDaemon(True)
+        t.start()
+    t.join()
