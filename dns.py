@@ -56,13 +56,13 @@ class dns_pack:
         saddr = (HOST, PORT)
         s.bind(saddr)
         s.sendto(Buf,(dnserver,53))
-        print "Query" +' ' +domainname + " "+ "is ok"
         data,addr=s.recvfrom(1024)
         #print time.clock()
         #判断有answer是否为空
         if data[6:8]=='\x00\x00':
             print '域名解析失败'
         else:
+            print "Query" + ' ' + domainname + " " + "is ok"
             #计算域名长度，推导出Answer字段中域名解析的偏移量
             domain_offset=domain_length+j+1
             answer_offset=12+domain_offset+4
