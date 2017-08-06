@@ -26,13 +26,13 @@ def do_checksum(data):
 #icmp header
 class icmp_pack:
     def __init__(self):
-        self.Type='0x08'#request
-        self.Code='0x00'
+        self.Type=0x08#request
+        self.Code=0x00
         self.Checksum=0
-        self.Identifier=random(1,65535)
+        self.Identifier=random.randint(1,65535)
         self.Sequencenumber=1
     def pack(self,data_length):
-        ping_header=struct.pack('bbHHH',self.Type,self.Code,self.Identifier,self.Sequencenumber)
+        ping_header=struct.pack('bbHH',self.Type,self.Code,self.Identifier,self.Sequencenumber)
         data=(data_length-8)*'p'
         data=struct.pack('d',time.time())+data
         checksum=do_checksum(data)
