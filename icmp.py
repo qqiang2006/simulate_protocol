@@ -41,7 +41,6 @@ class icmp_pack:
         ping_header=struct.pack('!bbHHh',self.Type,self.Code,self.Checksum,self.Identifier,self.Sequencenumber)
         data=(data_length-8)*'p'
         data=struct.pack('d',time.clock())+data
-        self.start_time=time.clock()
         checksum=get_checksum(ping_header+data)
         ping_data=struct.pack('!bbHHh',self.Type,self.Code,checksum,self.Identifier,self.Sequencenumber)
         return ping_data+data
@@ -56,5 +55,6 @@ except:
     print 'the socket is error'
 #received the response of the ping,include the ip header
 data,addr=s.recvfrom(1024)
-print struct.unpack('d',data[28:36])[0]-ping.start_time
+start_time=time.clock()#the time of receive the response
+print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
 s.close()
