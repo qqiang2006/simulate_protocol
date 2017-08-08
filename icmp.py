@@ -41,6 +41,7 @@ class icmp_pack:
         ping_header=struct.pack('!bbHHh',self.Type,self.Code,self.Checksum,self.Identifier,self.Sequencenumber)
         data=(data_length-8)*'p'
         data=struct.pack('d',time.clock())+data
+        self.start_time=time.clock()
         checksum=get_checksum(ping_header+data)
         ping_data=struct.pack('!bbHHh',self.Type,self.Code,checksum,self.Identifier,self.Sequencenumber)
         return ping_data+data
@@ -48,12 +49,12 @@ class icmp_pack:
 #creat the socket
 s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
 #print socket.getprotobyname('udp')
-HOST = ''
-PORT = 0
-saddr = (HOST, PORT)
-#s.bind(saddr)
 ping=icmp_pack()
-s.sendto(ping.pack(192),('6.6.6.6',0))
+try:
+    s.sendto(ping.pack(20),('6.6.6.6',0))
+except:
+    print 'the socket is error'
+#received the response of the ping,include the ip header
 data,addr=s.recvfrom(1024)
+print struct.unpack('d',data[28:36])[0]-ping.start_time
 s.close()
-print data,addr
