@@ -1,5 +1,12 @@
 #coding=utf8
 import struct,socket,time,random,os,sys
+help_info='''
+the command:python icmp.py [destination] [num]
+such as:python icmp.py 8.8.8.8 4
+Usage:
+	destinaton - the destination of ping
+	num        - the num of request
+'''
 #校验和函数
 def get_checksum(source):
     """
@@ -28,7 +35,8 @@ def get_checksum(source):
     # why? ans[9:16 1:8]
     answer = answer >> 8 | (answer << 8 & 0xff00)
     return answer
-
+def help():
+    print help_info
 #icmp header
 class icmp_pack:
     def __init__(self):
@@ -49,17 +57,21 @@ class icmp_pack:
 s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
 #print socket.getprotobyname('udp')
 ping=icmp_pack()
-IP_ping=sys.argv[1]
-num_ping=sys.argv[2]
-i=1
-while i <=int(num_ping):
-    try:
-        s.sendto(ping.pack(20),(IP_ping,0))
-    except:
-        print 'the socket is error'
-    #received the response of the ping,include the ip header
-    data,addr=s.recvfrom(1024)
-    start_time=time.clock()#the time of receive the response
-    print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
-    i+=1
-s.close()
+if len(sys.argv)<3:
+    print len(sys.argv)
+    help()
+else:
+    i=1
+    IP_ping=sys.argv[1]
+    num_ping=sys.argv[2]
+    while i <=int(num_ping):
+        try:
+            s.sendto(ping.pack(20),(IP_ping,0))
+        except:
+            print 'the socket is error'
+        #received the response of the ping,include the ip header
+        data,addr=s.recvfrom(1024)
+        start_time=time.clock()#the time of receive the response
+        print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+        i+=1
+    s.close()
