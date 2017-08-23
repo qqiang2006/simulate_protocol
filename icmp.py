@@ -1,5 +1,5 @@
 #coding=utf8
-import struct,socket,time,random,os
+import struct,socket,time,random,os,sys
 #校验和函数
 def get_checksum(source):
     """
@@ -49,12 +49,17 @@ class icmp_pack:
 s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
 #print socket.getprotobyname('udp')
 ping=icmp_pack()
-try:
-    s.sendto(ping.pack(20),('6.6.6.6',0))
-except:
-    print 'the socket is error'
-#received the response of the ping,include the ip header
-data,addr=s.recvfrom(1024)
-start_time=time.clock()#the time of receive the response
-print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+IP_ping=sys.argv[1]
+num_ping=sys.argv[2]
+i=1
+while i <=int(num_ping):
+    try:
+        s.sendto(ping.pack(20),(IP_ping,0))
+    except:
+        print 'the socket is error'
+    #received the response of the ping,include the ip header
+    data,addr=s.recvfrom(1024)
+    start_time=time.clock()#the time of receive the response
+    print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+    i+=1
 s.close()
