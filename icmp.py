@@ -64,7 +64,7 @@ else:
     i=1
     IP_ping=sys.argv[1]
     num_ping=sys.argv[2]
-    while i <=int(num_ping):
+    while not int(num_ping) or i<=int(num_ping):
         try:
             s.sendto(ping.pack(20),(IP_ping,0))
         except:
