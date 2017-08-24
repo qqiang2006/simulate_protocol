@@ -1,14 +1,14 @@
 #coding=utf8
 import struct,socket,time,random,os,sys
+
 help_info='''
 the command:python icmp.py [destination] [num] [data_length]
-such as:python icmp.py 8.8.8.8 4 32
+such as:python icmp.py -d 8.8.8.8 -n 4 -l 32
 Usage:
-	destinaton - the destination of ping
-	num        - the num of request(0为一直发送)
-        data_length- the length of data in ping 
+	-d destinaton  # the destination of ping
+	-n num         # the num of request(0为一直发送)
+        -l data_length # the length of data in ping 
 '''
-
 #校验和函数
 def get_checksum(source):
     """
@@ -55,31 +55,33 @@ class icmp_pack:
         ping_data=struct.pack('!bbHHh',self.Type,self.Code,checksum,self.Identifier,self.Sequencenumber)
         return ping_data+data
 
-#creat the socket
-s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
-s.settimeout(5)
-#print socket.getprotobyname('udp')
-ping=icmp_pack()
-if len(sys.argv)<4:
-    help()
-else:
-    i=1
-    IP_ping=sys.argv[1]
-    num_ping=sys.argv[2]
-    buf_data=sys.argv[3]
-    while not int(num_ping) or i<=int(num_ping):
-        try:
-            s.sendto(ping.pack(int(buf_data)),(IP_ping,0))
-        except:
-            print 'the socket is error'
+if __name__=='__main__':
+
+    #creat the socket
+    s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
+    s.settimeout(3)
+    #print socket.getprotobyname('udp')
+    ping=icmp_pack()
+    if len(sys.argv)<7:
+        help()
+    else:
+        i=1
+        IP_ping=sys.argv[sys.argv.index('-d')+1]
+        num_ping=sys.argv[sys.argv.index('-n')+1]
+        buf_data=sys.argv[sys.argv.index('-l')+1]
+        while not int(num_ping) or i<=int(num_ping):
+            try:
+                s.sendto(ping.pack(int(buf_data)),(IP_ping,0))
+            except:
+                print 'the socket is error'
+                i+=1
+                continue
+            #received the response of the ping,include the ip header
+            try:
+                data,addr=s.recvfrom(1024)
+                start_time=time.clock()#the time of receive the response
+                print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+            except:
+                print "the request is timeout"
             i+=1
-            continue
-        #received the response of the ping,include the ip header
-        try:
-            data,addr=s.recvfrom(1024)
-            start_time=time.clock()#the time of receive the response
-            print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
-        except:
-            print "the request is timeout"
-        i+=1
-    s.close()
+        s.close()
