@@ -55,10 +55,10 @@ class icmp_pack:
 
 #creat the socket
 s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
+s.settimeout(5)
 #print socket.getprotobyname('udp')
 ping=icmp_pack()
 if len(sys.argv)<3:
-    print len(sys.argv)
     help()
 else:
     i=1
@@ -70,8 +70,11 @@ else:
         except:
             print 'the socket is error'
         #received the response of the ping,include the ip header
-        data,addr=s.recvfrom(1024)
-        start_time=time.clock()#the time of receive the response
-        print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+        try:
+            data,addr=s.recvfrom(1024)
+            start_time=time.clock()#the time of receive the response
+            print 'get reply in %f ms '% ((start_time-struct.unpack('d',data[28:36])[0])*1000)
+        except:
+            print "the request is timeout"
         i+=1
     s.close()
