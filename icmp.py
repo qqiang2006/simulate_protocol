@@ -8,6 +8,7 @@ Usage:
 	num        - the num of request(0为一直发送)
         data_length- the length of data in ping 
 '''
+
 #校验和函数
 def get_checksum(source):
     """
