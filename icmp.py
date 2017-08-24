@@ -1,11 +1,12 @@
 #coding=utf8
 import struct,socket,time,random,os,sys
 help_info='''
-the command:python icmp.py [destination] [num]
-such as:python icmp.py 8.8.8.8 4
+the command:python icmp.py [destination] [num] [data_length]
+such as:python icmp.py 8.8.8.8 4 32
 Usage:
 	destinaton - the destination of ping
-	num        - the num of request
+	num        - the num of request(0为一直发送)
+        data_length- the length of data in ping 
 '''
 #校验和函数
 def get_checksum(source):
@@ -58,17 +59,20 @@ s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
 s.settimeout(5)
 #print socket.getprotobyname('udp')
 ping=icmp_pack()
-if len(sys.argv)<3:
+if len(sys.argv)<4:
     help()
 else:
     i=1
     IP_ping=sys.argv[1]
     num_ping=sys.argv[2]
+    buf_data=sys.argv[3]
     while not int(num_ping) or i<=int(num_ping):
         try:
-            s.sendto(ping.pack(20),(IP_ping,0))
+            s.sendto(ping.pack(int(buf_data)),(IP_ping,0))
         except:
             print 'the socket is error'
+            i+=1
+            continue
         #received the response of the ping,include the ip header
         try:
             data,addr=s.recvfrom(1024)
