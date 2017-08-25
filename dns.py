@@ -20,7 +20,17 @@ s	char[]	string	1
 p	char[]	string	 	 
 P	void *	integer	 	(5), (3)
 '''
-import struct,random,socket,threading,time,thread
+help_info='''
+the command:python dns.py [domain_name] [open] [dns_server]
+such as:python icmp.py -domain www.baidu.com -open 4 -s 114.114.114.114
+Usage:
+        -domain domainname  # the domainname of request
+        -open connection    # the connetion of request
+        -s dns_server       # the dns_server 
+'''
+
+
+import struct,random,socket,threading,time,thread,sys
 class dns_pack:
     def __init__(self):
         self.TransactionID=random.randint(1,32768)
@@ -83,14 +93,19 @@ class dns_pack:
 
         s.close()
 if __name__=='__main__':
-    dns_query=dns_pack()
-    domain_name=raw_input("Please input your domainname:").split(',')
-    #实现并发
-    threads=[]
-    for i in range(int(domain_name[1])):
-        t_i=threading.Thread(target=dns_query.query,args=(domain_name[0],'114.114.114.114'))
-        threads.append(t_i)
-    for t in threads:
-        t.setDaemon(True)
-        t.start()
-    t.join()
+    if len(sys.argv)<7:
+        print help_info
+    else:
+        dns_query=dns_pack()
+        domain_name=sys.argv[sys.argv.index('-domain')+1]
+        thread_num=sys.argv[sys.argv.index('-open')+1]
+        dns_server=sys.argv[sys.argv.index('-s')+1]
+        #实现并发
+        threads=[]
+        for i in range(int(thread_num)):
+            t_i=threading.Thread(target=dns_query.query,args=(domain_name,dns_server))
+            threads.append(t_i)
+        for t in threads:
+            t.setDaemon(True)
+            t.start()
+        t.join()
