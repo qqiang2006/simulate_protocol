@@ -1,6 +1,6 @@
 #coding=utf8
 import socket,struct,time,random
-from scapy.all import *
+#from scapy.all import *
 class IP:
     def __init__(self):
         self.Version=4
@@ -18,4 +18,5 @@ class IP:
         self.Source=0
         self.Dest=0
     def ip_pack(self,source,dest):
-        struct.pack('!',self.Version<<4+self.Headerlength,self.DSCP,self.Totallength,self.Indentification,self.)
+        struct.pack('!',self.Version<<4+self.Headerlength,self.DSCP,self.Totallength,self.Indentification,self.,socket.inet_aton(self.Source),socket.inet_ntoa(self.Dest))
+
