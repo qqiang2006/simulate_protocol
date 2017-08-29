@@ -1,5 +1,6 @@
 #coding=utf8
 import socket,struct,time,random
+from icmp import *
 #from scapy.all import *
 
 #检验和
@@ -42,22 +43,23 @@ class IP:
         self.MF=0
         self.offset=0
         self.TTL=0x80
-        self.Protocol=0
+        self.Protocol=1
         self.Checksum=0
         self.Source=0
         self.Dest=0
     def ip_pack(self,source,dest):
         header=struct.pack('!BBHHHBB4s4s',(self.Version<<4)+self.Headerlength,self.DSCP,self.Totallength,self.Indentification,(self.reserved<<15)+(self.DF<<14)+(self.MF<<13)+self.offset,self.TTL,self.Protocol,socket.inet_aton(source),socket.inet_aton(dest))
-        print get_checksum(header)
+       # print get_checksum(header)
         ip_header=struct.pack('!BBHHHBBH4s4s',(self.Version<<4)+self.Headerlength,self.DSCP,self.Totallength,self.Indentification,(self.reserved<<15)+(self.DF<<14)+(self.MF<<13)+self.offset,self.TTL,self.Protocol,get_checksum(header),socket.inet_aton(source),socket.inet_aton(dest))
         return ip_header
 if __name__=='__main__':
-    s=socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_RAW)
-    host='4.4.4.4'
+    s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
+    host='192.168.10.199'
     port=0
     ip_buf=IP()
-    buf=ip_buf.ip_pack('3.3.3.3','4.4.4.4')
-    print buf
-    s.sendto(buf,(host,port))
-
-
+    icmp=icmp_pack()
+    icmp_buf=icmp.pack(20)
+    print icmp_buf
+    for i in range(254):
+        buf=ip_buf.ip_pack('192.168.10.%d'%i,'192.168.10.199')+icmp_buf
+        s.sendto(buf,(host,port))
