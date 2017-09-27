@@ -53,13 +53,18 @@ class IP:
         ip_header=struct.pack('!BBHHHBBH4s4s',(self.Version<<4)+self.Headerlength,self.DSCP,self.Totallength,self.Indentification,(self.reserved<<15)+(self.DF<<14)+(self.MF<<13)+self.offset,self.TTL,self.Protocol,get_checksum(header),socket.inet_aton(source),socket.inet_aton(dest))
         return ip_header
 if __name__=='__main__':
-    s=socket.socket(socket.AF_INET,socket.SOCK_RAW,1)
+    s=socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_RAW)
     host='192.168.10.199'
     port=0
+    #s.bind(('3.3.3.3','1024'))
     ip_buf=IP()
     icmp=icmp_pack()
     icmp_buf=icmp.pack(20)
-    print icmp_buf
-    for i in range(254):
-        buf=ip_buf.ip_pack('192.168.10.%d'%i,'192.168.10.199')+icmp_buf
+    #print icmp_buf
+    subnet_range=sys.argv[1]
+    subnet_min=subnet_range.split('-')[0].split('.')[3]
+    subnet_max=subnet_range.split('-')[1]
+    for i in range(int(subnet_min),int(subnet_max)):
+        subnet_range==sys.argv[1]
+        buf=ip_buf.ip_pack(subnet_range.split('-')[0][:-2]+'.'+str(i),'192.168.10.199')+"pppp"
         s.sendto(buf,(host,port))
